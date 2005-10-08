@@ -1,0 +1,80 @@
+NAME
+    DBIx::Class::Loader - Dynamic definition of DBIx::Class sub classes.
+
+SYNOPSIS
+      use DBIx::Class::Loader;
+
+      my $loader = DBIx::Class::Loader->new(
+        dsn                     => "dbi:mysql:dbname",
+        user                    => "root",
+        password                => "",
+        namespace               => "Data",
+        additional_classes      => qw/DBIx::Class::Foo/,
+        additional_base_classes => qw/My::Stuff/,
+        left_base_classes       => qw/DBIx::Class::Bar/,
+        constraint              => '^foo.*',
+        relationships           => 1,
+        options                 => { AutoCommit => 1 }, 
+        inflect                 => { child => 'children' }
+      );
+      my $class = $loader->find_class('film'); # $class => Data::Film
+      my $obj = $class->retrieve(1);
+
+    use with mod_perl
+
+    in your startup.pl
+
+      # load all tables
+      use DBIx::Class::Loader;
+      my $loader = DBIx::Class::Loader->new(
+        dsn       => "dbi:mysql:dbname",
+        user      => "root",
+        password  => "",
+        namespace => "Data",
+      );
+
+    in your web application.
+
+      use strict;
+
+      # you can use Data::Film directly
+      my $film = Data::Film->retrieve($id);
+
+DESCRIPTION
+    DBIx::Class::Loader automate the definition of DBIx::Class sub-classes.
+    scan table schemas and setup columns, primary key.
+
+    class names are defined by table names and namespace option.
+
+     +-----------+-----------+-----------+
+     |   table   | namespace | class     |
+     +-----------+-----------+-----------+
+     |   foo     | Data      | Data::Foo |
+     |   foo_bar |           | FooBar    |
+     +-----------+-----------+-----------+
+
+    DBIx::Class::Loader supports MySQL, Postgres and SQLite.
+
+    See DBIx::Class::Loader::Generic for more, and
+    DBIx::Class::Loader::Writing for notes on writing your own db-specific
+    subclass for an unsupported db.
+
+    Class::DBI::Loader and Class::DBI are now obsolete, use DBIx::Class and
+    this module instead. ;)
+
+AUTHOR
+    Sebastian Riedel, "sri@oook.de"
+
+    Based upon the work of IKEBE Tomohiro
+
+THANK YOU
+    Adam Anderson, Andy Grundman, Autrijus Tang, Dan Kubb, David Naughton,
+    Randal Schwartz, Simon Flack and all the others who've helped.
+
+LICENSE
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+SEE ALSO
+    DBIx::Class
+
