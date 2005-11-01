@@ -1,0 +1,12 @@
+Revision history for Perl extension DBIx::Class::Loader
+
+0.03  Wed Nov 02 18:00:00 2005
+        - new version number :P
+
+0.02  Mon Oct 24 18:00:00 2005
+        - Added $DBIx::Class::Loader::SCHEMA
+        - Fixed Pg loader
+	- Bumped version dependency.
+
+0.01  Mon Sep 19 00:00:00 2005
+        - original version.
