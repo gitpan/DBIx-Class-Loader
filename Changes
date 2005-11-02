@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.05  Wed Nov 02 18:00:00 2005
+        - Fixed dump output
+
 0.04  Wed Nov 02 18:00:00 2005
         - Fixed Pg loader
 

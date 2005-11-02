@@ -173,7 +173,8 @@ sub _belongs_to_many {
       if $self->{_inflect}
       and exists $self->{_inflect}->{ lc $table_class_base };
     warn qq/\# Has_many relationship\n/ if $self->debug;
-    warn qq/$other_class->has_many( '$plural' => '$table_class', '$column' );\n\n/
+    warn
+      qq/$other_class->has_many( '$plural' => '$table_class', '$column' );\n\n/
       if $self->debug;
     $other_class->has_many( $plural => $table_class, $column );
 }
@@ -210,7 +211,11 @@ sub _load_classes {
         $self->{CLASSES}->{$table} = $class;
         my $code = "package $class;\n$additional_base$additional$left_base";
         warn qq/$code/                        if $self->debug;
-        warn qq/$class->table('$table');\n\n/ if $self->debug;
+        warn qq/$class->table('$table');\n/ if $self->debug;
+        my $columns = join "', '", @$cols;
+        warn qq/$class->add_columns('$columns')\n/ if $self->debug;
+        my $primaries = join "', '", @$pks;
+        warn qq/$class->set_primary_key('$primaries')\n/ if $self->debug;
         eval $code;
         croak qq/Couldn't load additional classes "$@"/ if $@;
         unshift @{"$class\::ISA"}, $_ foreach ( @{ $self->{_left_base} } );
