@@ -50,7 +50,7 @@ sub _table_info {
     my ( $self, $table ) = @_;
     my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
     my $catalog = "";
-    if ( $self->_pg_version >= 7.3 ) {
+    if ( $self->_pg_version($dbh) >= 7.3 ) {
         $catalog = 'pg_catalog.';
     }
 
@@ -92,7 +92,7 @@ SQL
 
 sub _pg_version {
     my $class = shift;
-    my $dbh   = $class->storage->dbh;
+    my $dbh   = shift;
     my $sth   = $dbh->prepare("SELECT version()");
     $sth->execute;
     my ($ver_str) = $sth->fetchrow_array;
