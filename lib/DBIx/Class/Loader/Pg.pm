@@ -86,7 +86,7 @@ SQL
         next unless $prinum{ $col->[1] };
         push @primary, $col->[0];
     }
-    _croak("$table has no primary key") unless @primary;
+    croak("$table has no primary key") unless @primary;
     return ( \@cols, \@primary );
 }
 

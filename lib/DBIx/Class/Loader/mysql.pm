@@ -90,7 +90,7 @@ sub _table_info {
         push @cols, $col;
         push @pri, $col if $hash->{key} eq "PRI";
     }
-    $self->_croak("$table has no primary key") unless @pri;
+    $self->croak("$table has no primary key") unless @pri;
     return ( \@cols, \@pri );
 }
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.06  Thu Nov 03 18:00:00 2005
+        - Fixed the _croak bug
+
 0.05  Wed Nov 02 18:00:00 2005
         - Fixed dump output
 
