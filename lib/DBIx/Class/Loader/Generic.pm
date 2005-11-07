@@ -231,6 +231,8 @@ sub _relationships {
             for my $res ( @{ $sth->fetchall_arrayref( {} ) } ) {
                 my $column = $res->{FK_COLUMN_NAME};
                 my $other  = $res->{UK_TABLE_NAME};
+                $column =~ s/"//g;
+                $other =~ s/"//g;
                 eval { $self->_belongs_to_many( $table, $column, $other ) };
                 warn qq/\# belongs_to_many failed "$@"\n\n/
                   if $@ && $self->debug;
