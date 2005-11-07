@@ -81,16 +81,18 @@ sub _tables {
 sub _table_info {
     my ( $self, $table ) = @_;
     my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
-    my $query = "DESCRIBE '$table'";
+
+    # MySQL 4.x doesn't support quoted tables
+    my $query = "DESCRIBE $table";
     my $sth = $dbh->prepare($query) or die("Cannot get table status: $table");
     $sth->execute;
     my ( @cols, @pri );
-    while ( my $hash = $sth->fetch_hash ) {
-        my ($col) = $hash->{field} =~ /(\w+)/;
+    while ( my $hash = $sth->fetchrow_hashref ) {
+        my ($col) = $hash->{Field} =~ /(\w+)/;
         push @cols, $col;
-        push @pri, $col if $hash->{key} eq "PRI";
+        push @pri, $col if $hash->{Key} eq "PRI";
     }
-    $self->croak("$table has no primary key") unless @pri;
+    croak("$table has no primary key") unless @pri;
     return ( \@cols, \@pri );
 }
 
