@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.09  Mon Nov 07 18:00:00 2005
+        - Updated mysql loader
+
 0.08  Mon Nov 07 18:00:00 2005
         - Fixed Pg loader
 
