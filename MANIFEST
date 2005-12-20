@@ -1,5 +1,6 @@
 Changes
 lib/DBIx/Class/Loader.pm
+lib/DBIx/Class/Loader/DB2.pm
 lib/DBIx/Class/Loader/Generic.pm
 lib/DBIx/Class/Loader/mysql.pm
 lib/DBIx/Class/Loader/Pg.pm

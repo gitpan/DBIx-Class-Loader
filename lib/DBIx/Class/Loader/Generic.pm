@@ -99,6 +99,8 @@ sub new {
         _exclude         => $args{exclude},
         _relationships   => $args{relationships},
         _inflect         => $args{inflect},
+        _schema          => $args{schema},
+        _dropschema      => $args{dropschema},
         CLASSES          => {},
     }, $class;
     warn qq/\### START DBIx::Class::Loader dump ###\n/ if $self->debug;
@@ -160,13 +162,22 @@ sub _db_classes { croak "ABSTRACT METHOD" }
 
 # Setup has_a and has_many relationships
 sub _belongs_to_many {
-    my ( $self, $table, $column, $other ) = @_;
+    my ( $self, $table, $column, $other, $other_column ) = @_;
     my $table_class = $self->find_class($table);
     my $other_class = $self->find_class($other);
     warn qq/\# Belongs_to relationship\n/ if $self->debug;
-    warn qq/$table_class->belongs_to( '$column' => '$other_class' );\n\n/
-      if $self->debug;
-    $table_class->belongs_to( $column => $other_class );
+    if($other_column) {
+        warn qq/$table_class->belongs_to( '$column' => '$other_class',/
+          .  qq/ { "foreign.$other_column" => "self.$column" } );\n\n/
+          if $self->debug;
+        $table_class->belongs_to( $column => $other_class, 
+          { "foreign.$other_column" => "self.$column" } );
+    }
+    else {
+        warn qq/$table_class->belongs_to( '$column' => '$other_class' );\n\n/
+          if $self->debug;
+        $table_class->belongs_to( $column => $other_class );
+    }
     my ($table_class_base) = $table_class =~ /.*::(.+)/;
     my $plural = Lingua::EN::Inflect::PL( lc $table_class_base );
     $plural = $self->{_inflect}->{ lc $table_class_base }
@@ -182,7 +193,8 @@ sub _belongs_to_many {
 # Load and setup classes
 sub _load_classes {
     my $self            = shift;
-    my @tables          = $self->_tables();
+    my @schema          = ('schema' => $self->{_schema}) if($self->{_schema});
+    my @tables          = $self->_tables(@schema);
     my @db_classes      = $self->_db_classes();
     my $additional      = join '', map "use $_;\n", @{ $self->{_additional} };
     my $additional_base = join '', map "use base '$_';\n",
@@ -199,19 +211,24 @@ sub _load_classes {
     foreach my $table (@tables) {
         next unless $table =~ /$constraint/;
         next if ( defined $exclude && $table =~ /$exclude/ );
-        my $class = $self->_table2class($table);
+        my ($schema, $tbl) = split /\./, $table;
+        my $tablename = lc $table;
+        if($tbl) {
+            $tablename = $self->{_dropschema} ? $tbl : lc $table;
+        }
+        my $class = $self->_table2class($schema, $tbl);
         $self->inject_base( $class, $dbclass, 'DBIx::Class::Core' );
         $_->require for @db_classes;
         $self->inject_base( $class, $_ ) for @db_classes;
         warn qq/\# Initializing table "$table" as "$class"\n/ if $self->debug;
-        $class->table($table);
+        $class->table(lc $tablename);
         my ( $cols, $pks ) = $self->_table_info($table);
         $class->add_columns(@$cols);
         $class->set_primary_key(@$pks);
-        $self->{CLASSES}->{$table} = $class;
+        $self->{CLASSES}->{lc $tablename} = $class;
         my $code = "package $class;\n$additional_base$additional$left_base";
         warn qq/$code/                        if $self->debug;
-        warn qq/$class->table('$table');\n/ if $self->debug;
+        warn qq/$class->table('$tablename');\n/ if $self->debug;
         my $columns = join "', '", @$cols;
         warn qq/$class->add_columns('$columns')\n/ if $self->debug;
         my $primaries = join "', '", @$pks;
@@ -231,9 +248,11 @@ sub _relationships {
             for my $res ( @{ $sth->fetchall_arrayref( {} ) } ) {
                 my $column = $res->{FK_COLUMN_NAME};
                 my $other  = $res->{UK_TABLE_NAME};
+                my $other_column  = $res->{UK_COLUMN_NAME};
                 $column =~ s/"//g;
                 $other =~ s/"//g;
-                eval { $self->_belongs_to_many( $table, $column, $other ) };
+                eval { $self->_belongs_to_many( $table, $column, $other,
+		  $other_column ) };
                 warn qq/\# belongs_to_many failed "$@"\n\n/
                   if $@ && $self->debug;
             }
@@ -243,10 +262,16 @@ sub _relationships {
 
 # Make a class from a table
 sub _table2class {
-    my ( $self, $table ) = @_;
+    my ( $self, $schema, $table ) = @_;
     my $namespace = $self->{_namespace} || "";
     $namespace =~ s/(.*)::$/$1/;
-    my $subclass = join '', map ucfirst, split /[\W_]+/, $table;
+    if($table) {
+        $schema = ucfirst lc $schema;
+        $namespace .= "::$schema" if(!$self->{_dropschema});
+    } else {
+        $table = $schema;
+    }
+    my $subclass = join '', map ucfirst, split /[\W_]+/, lc $table;
     my $class = $namespace ? "$namespace\::" . $subclass : $subclass;
 }
 

@@ -55,9 +55,9 @@ sub _relationships {
         $sth->execute;
         my $comment = $sth->fetchrow_hashref->{comment} || '';
         $comment =~ s/$quoter//g if ($quoter);
-        while ( $comment =~ m!\(`?(\w+)`?\)\sREFER\s`?\w+/(\w+)`?\(`?\w+`?\)!g )
+        while ( $comment =~ m!\(`?(\w+)`?\)\sREFER\s`?\w+/(\w+)`?\(`?(\w+)`?\)!g )
         {
-            eval { $self->_belongs_to_many( $table, $1, $2 ) };
+            eval { $self->_belongs_to_many( $table, $1, $2, $3 ) };
             warn qq/\# belongs_to_many failed "$@"\n\n/ if $@ && $self->debug;
         }
         $sth->finish;

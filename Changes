@@ -1,5 +1,11 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.10  Tue Dec 20 06:22:23 2005
+        - Fixed foreign key relationships to columns other than primary keys [blblack]
+        - Fixed mysql test script [blblack]
+        - Some schema support added [castaway]
+        - DB2 support added [castaway]
+
 0.09  Mon Nov 07 18:00:00 2005
         - Updated mysql loader
 
@@ -24,7 +30,7 @@ Revision history for Perl extension DBIx::Class::Loader
 0.02  Mon Oct 24 18:00:00 2005
         - Added $DBIx::Class::Loader::SCHEMA
         - Fixed Pg loader
-	- Bumped version dependency.
+        - Bumped version dependency.
 
 0.01  Mon Sep 19 00:00:00 2005
         - original version.

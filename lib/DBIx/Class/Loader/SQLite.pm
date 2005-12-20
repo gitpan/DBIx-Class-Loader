@@ -79,11 +79,11 @@ SELECT sql FROM sqlite_master WHERE tbl_name = ?
             $col =~ s/^\s+//gs;
 
             # Grab reference
-            if ( $col =~ /^(\w+).*REFERENCES\s+(\w+)/i ) {
+            if ( $col =~ /^(\w+).*REFERENCES\s+(\w+)\s*(\w+)?/i ) {
                 chomp $col;
                 warn qq/\# Found foreign key definition "$col"\n\n/
                   if $self->debug;
-                eval { $self->_belongs_to_many( $table, $1, $2 ) };
+                eval { $self->_belongs_to_many( $table, $1, $2, $3 ) };
                 warn qq/\# belongs_to_many failed "$@"\n\n/
                   if $@ && $self->debug;
             }

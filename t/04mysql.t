@@ -2,6 +2,7 @@ use strict;
 use Test::More tests => 6;
 
 use DBIx::Class::Loader;
+use DBI;
 
 my $dbh;
 my $database = $ENV{MYSQL_NAME};
@@ -59,10 +60,11 @@ SQL
         dsn        => $dsn,
         user       => $user,
         password   => $password,
-        constraint => '^loader_test.+'
+        constraint => '^loader_test.+',
+        namespace  => 'MysqlTest',
     );
-    is( $loader->find_class("loader_test1"), "LoaderTest1" );
-    is( $loader->find_class("loader_test2"), "LoaderTest2" );
+    is( $loader->find_class("loader_test1"), "MysqlTest::LoaderTest1" );
+    is( $loader->find_class("loader_test2"), "MysqlTest::LoaderTest2" );
     my $class1 = $loader->find_class("loader_test1");
     my $obj    = $class1->find(1);
     is( $obj->id,  1 );

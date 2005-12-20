@@ -2,7 +2,7 @@ package DBIx::Class::Loader;
 
 use strict;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 NAME
 
@@ -54,14 +54,15 @@ in your web application.
 DBIx::Class::Loader automate the definition of DBIx::Class sub-classes.
 scan table schemas and setup columns, primary key.
 
-class names are defined by table names and namespace option.
+class names are defined by table names and namespace option.  The namespace
+option is required.
 
- +-----------+-----------+-----------+
- |   table   | namespace | class     |
- +-----------+-----------+-----------+
- |   foo     | Data      | Data::Foo |
- |   foo_bar |           | FooBar    |
- +-----------+-----------+-----------+
+ +-----------+-----------+--------------+
+ |   table   | namespace | class        |
+ +-----------+-----------+--------------+
+ |   foo     | Data      | Data::Foo    |
+ |   foo_bar | MyDB      | MyDB::FooBar |
+ +-----------+-----------+--------------+
 
 DBIx::Class::Loader supports MySQL, Postgres and SQLite.
 
