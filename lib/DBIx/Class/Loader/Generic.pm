@@ -223,8 +223,9 @@ sub _load_classes {
         warn qq/\# Initializing table "$table" as "$class"\n/ if $self->debug;
         $class->table(lc $tablename);
         my ( $cols, $pks ) = $self->_table_info($table);
+        carp("$table has no primary key") unless @$pks;
         $class->add_columns(@$cols);
-        $class->set_primary_key(@$pks);
+        $class->set_primary_key(@$pks) if @$pks;
         $self->{CLASSES}->{lc $tablename} = $class;
         my $code = "package $class;\n$additional_base$additional$left_base";
         warn qq/$code/                        if $self->debug;
@@ -232,7 +233,7 @@ sub _load_classes {
         my $columns = join "', '", @$cols;
         warn qq/$class->add_columns('$columns')\n/ if $self->debug;
         my $primaries = join "', '", @$pks;
-        warn qq/$class->set_primary_key('$primaries')\n/ if $self->debug;
+        warn qq/$class->set_primary_key('$primaries')\n/ if $self->debug && @$pks;
         eval $code;
         croak qq/Couldn't load additional classes "$@"/ if $@;
         unshift @{"$class\::ISA"}, $_ foreach ( @{ $self->{_left_base} } );

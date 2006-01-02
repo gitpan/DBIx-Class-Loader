@@ -8,6 +8,7 @@ WriteMakefile(
         DBIx::Class         => 0.03001,
         DBI                 => 1.30,
         Lingua::EN::Inflect => 0,
-        Text::Balanced      => 0
+        Text::Balanced      => 0,
+        UNIVERSAL::require  => 0.10,
     },
 );

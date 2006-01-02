@@ -2,7 +2,7 @@ use strict;
 use Test::More;
 
 BEGIN {
-    plan tests => 14;
+    plan tests => 15;
 }
 
 use DBIx::Class::Loader;
@@ -98,6 +98,12 @@ SQL
 
 $dbh->do("INSERT INTO loader_test6 (id,loader_test5,dat) VALUES (1,'aaa','bbb')");
 
+$dbh->do(<<'SQL');
+CREATE TABLE loader_test7 (
+    loader_test7 TEXT NOT NULL
+)
+SQL
+
 my $loader = DBIx::Class::Loader->new(
     dsn           => $dsn,
     namespace     => 'SQLiteTest',
@@ -111,6 +117,7 @@ is( $loader->find_class("loader_test3"), "SQLiteTest::LoaderTest3" );
 is( $loader->find_class("loader_test4"), "SQLiteTest::LoaderTest4" );
 is( $loader->find_class("loader_test5"), "SQLiteTest::LoaderTest5" );
 is( $loader->find_class("loader_test6"), "SQLiteTest::LoaderTest6" );
+is( $loader->find_class("loader_test7"), "SQLiteTest::LoaderTest7" );
 
 my $class1 = $loader->find_class("loader_test1");
 my $obj    = $class1->find(1);
@@ -132,8 +139,9 @@ my $class6 = $loader->find_class("loader_test6");
 my $obj6 = $class6->find(1);
 # fk that references a non-pk
 is( $obj6->loader_test5->isa('SQLiteTest::LoaderTest5'), 1 );
+my $class7 = $loader->find_class("loader_test7");
 
-for ( $class1, $class2, $class3, $class4, $class5, $class6 ) {
+for ( $class1, $class2, $class3, $class4, $class5, $class6, $class7 ) {
     $_->storage->dbh->disconnect;
 }
 

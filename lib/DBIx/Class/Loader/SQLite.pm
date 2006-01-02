@@ -101,6 +101,7 @@ sub _tables {
         next unless lc( $row->{type} ) eq 'table';
         push @tables, $row->{tbl_name};
     }
+    $dbh->disconnect;
     return @tables;
 }
 
@@ -124,6 +125,7 @@ SQL
     $sth->execute($table);
     my ($sql) = $sth->fetchrow_array;
     $sth->finish;
+    $dbh->disconnect;
     my ($primary) = $sql =~ m/
     (?:\(|\,) # either a ( to start the definition or a , for next
     \s*       # maybe some whitespace

@@ -92,7 +92,8 @@ sub _table_info {
         push @cols, $col;
         push @pri, $col if $hash->{Key} eq "PRI";
     }
-    croak("$table has no primary key") unless @pri;
+
+    $dbh->disconnect;
     return ( \@cols, \@pri );
 }
 

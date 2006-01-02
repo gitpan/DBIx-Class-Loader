@@ -41,6 +41,7 @@ sub _tables {
     my @tables = $DBD::Pg::VERSION >= 1.31 ? 
         $dbh->tables( undef, $SCHEMA, "", "table", { noprefix => 1, pg_noprefix => 1 } )
         : $dbh->tables;
+    $dbh->disconnect;
     s/"//g for @tables;
     return @tables;
 }
@@ -54,9 +55,11 @@ sub _table_info {
     s/"//g for @cols;
     
     my @primary = $dbh->primary_key(undef, $SCHEMA, $table);
+
+    $dbh->disconnect;
+
     s/"//g for @primary;
 
-    croak("$table has no primary key") unless @primary;
     return ( \@cols, \@primary );
 }
 

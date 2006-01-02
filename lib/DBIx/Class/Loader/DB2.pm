@@ -43,6 +43,7 @@ sub _tables {
     my @tables = $DBD::DB2::VERSION >= 1.14 ? 
     $dbh->tables( { TABLE_SCHEM => '%', TABLE_TYPE => 'TABLE,VIEW' } )
         : $dbh->tables;
+    $dbh->disconnect;
     # People who use table or schema names that aren't identifiers deserve
     # what they get.  Still, FIXME?
     s/\"//g for @tables;
@@ -78,10 +79,10 @@ WHERE tc.TABSCHEMA = ? and tc.TABNAME = ? and tc.TYPE = 'P'
 SQL
 
     $sth->execute($schema, $tabname) or die;
-    
+    $dbh->disconnect;
+
     my @pri = map { @$_ } @{$sth->fetchall_arrayref};
     
-    carp("$table has no primary key") unless @pri;
     return ( \@cols, \@pri );
 }
 

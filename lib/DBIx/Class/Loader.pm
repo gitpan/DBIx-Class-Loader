@@ -1,8 +1,9 @@
 package DBIx::Class::Loader;
 
 use strict;
+use UNIVERSAL::require;
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 =head1 NAME
 
@@ -17,9 +18,9 @@ DBIx::Class::Loader - Dynamic definition of DBIx::Class sub classes.
     user                    => "root",
     password                => "",
     namespace               => "Data",
-    additional_classes      => qw/DBIx::Class::Foo/,
-    additional_base_classes => qw/My::Stuff/,
-    left_base_classes       => qw/DBIx::Class::Bar/,
+    additional_classes      => [qw/DBIx::Class::Foo/],
+    additional_base_classes => [qw/My::Stuff/],
+    left_base_classes       => [qw/DBIx::Class::Bar/],
     constraint              => '^foo.*',
     relationships           => 1,
     options                 => { AutoCommit => 1 }, 
@@ -51,24 +52,22 @@ in your web application.
 
 =head1 DESCRIPTION
 
-DBIx::Class::Loader automate the definition of DBIx::Class sub-classes.
-scan table schemas and setup columns, primary key.
+DBIx::Class::Loader automate the definition of DBIx::Class sub-classes by
+scanning table schemas and setting up columns and primary keys.
 
-class names are defined by table names and namespace option.  The namespace
-option is required.
+Class names are defined by table names and the namespace option, which is
+required.
 
- +-----------+-----------+--------------+
- |   table   | namespace | class        |
- +-----------+-----------+--------------+
- |   foo     | Data      | Data::Foo    |
- |   foo_bar | MyDB      | MyDB::FooBar |
- +-----------+-----------+--------------+
+ +---------+-----------+--------------+
+ | table   | namespace | class        |
+ +---------+-----------+--------------+
+ | foo     | Data      | Data::Foo    |
+ | foo_bar | MyDB      | MyDB::FooBar |
+ +---------+-----------+--------------+
 
-DBIx::Class::Loader supports MySQL, Postgres and SQLite.
-
-See L<DBIx::Class::Loader::Generic> for more, and
-L<DBIx::Class::Loader::Writing> for notes on writing your own db-specific
-subclass for an unsupported db.
+DBIx::Class::Loader supports MySQL, Postgres, SQLite and DB2.  See
+L<DBIx::Class::Loader::Generic> for more, and L<DBIx::Class::Loader::Writing>
+for notes on writing your own db-specific subclass for an unsupported db.
 
 L<Class::DBI::Loader> and L<Class::DBI> are now obsolete, use L<DBIx::Class> and this module instead. ;)
 
@@ -80,8 +79,8 @@ sub new {
     my ($driver) = $dsn =~ m/^dbi:(\w*?)(?:\((.*?)\))?:/i;
     $driver = 'SQLite' if $driver eq 'SQLite2';
     my $impl = "DBIx::Class::Loader::" . $driver;
-    eval qq/use $impl/;
-    die qq/Couldn't require loader class "$impl", "$@"/ if $@;
+    $impl->require or
+    die qq/Couldn't require loader class "$impl", "$UNIVERSAL::require::ERROR"/;
     return $impl->new(%args);
 }
 
