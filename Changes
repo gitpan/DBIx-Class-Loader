@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.12  Fri Jan 13 06:09:04 2006
+        - Changed "comment" to "Comment" for mysql "SHOW TABLE STATUS"
+        - Added relationship tests for pg, mysql, and db2
+
 0.11  Mon Jan 02 17:25:14 2006
         - use UNIVERSAL::require for loading the implementation class [Jason Kohles]
         - docs fixes [Jason Kohles]

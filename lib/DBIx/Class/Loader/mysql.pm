@@ -53,7 +53,7 @@ sub _relationships {
         my $sth   = $dbh->prepare($query)
           or die("Cannot get table status: $table");
         $sth->execute;
-        my $comment = $sth->fetchrow_hashref->{comment} || '';
+        my $comment = $sth->fetchrow_hashref->{Comment} || '';
         $comment =~ s/$quoter//g if ($quoter);
         while ( $comment =~ m!\(`?(\w+)`?\)\sREFER\s`?\w+/(\w+)`?\(`?(\w+)`?\)!g )
         {
