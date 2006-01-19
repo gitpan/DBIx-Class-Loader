@@ -46,20 +46,25 @@ sub _relationships {
       : ( database => $1 );
     my $dbname = $conn{database} || $conn{dbname} || $conn{db};
     die("Can't figure out the table name automatically.") if !$dbname;
-    my $quoter = $dbh->get_info(29);
 
     foreach my $table (@tables) {
-        my $query = "SHOW TABLE STATUS FROM $dbname LIKE '$table'";
+        my $query = "SHOW CREATE TABLE ${dbname}.${table}";
         my $sth   = $dbh->prepare($query)
-          or die("Cannot get table status: $table");
+          or die("Cannot get table definition: $table");
         $sth->execute;
-        my $comment = $sth->fetchrow_hashref->{Comment} || '';
-        $comment =~ s/$quoter//g if ($quoter);
-        while ( $comment =~ m!\(`?(\w+)`?\)\sREFER\s`?\w+/(\w+)`?\(`?(\w+)`?\)!g )
-        {
-            eval { $self->_belongs_to_many( $table, $1, $2, $3 ) };
+        my $table_def = $sth->fetchrow_arrayref->[1] || '';
+        
+        my (@cols) = ($table_def =~ /CONSTRAINT `.*` FOREIGN KEY \(`(.*)`\) REFERENCES `(.*)` \(`(.*)`\)/g);
+
+        while (scalar @cols > 0) {
+            my $column = shift @cols;
+            my $remote_table = shift @cols;
+            my $remote_column = shift @cols;
+            
+            eval { $self->_belongs_to_many( $table, $column, $remote_table, $remote_column) };
             warn qq/\# belongs_to_many failed "$@"\n\n/ if $@ && $self->debug;
         }
+        
         $sth->finish;
     }
 }

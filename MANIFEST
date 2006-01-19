@@ -12,7 +12,8 @@ META.yml
 t/01use.t
 t/02pod.t
 t/03podcoverage.t
-t/04mysql.t
-t/05pg.t
-t/06sqlite.t
-t/07db2.t
+t/10sqlite_common.t
+t/11mysql_common.t
+t/12pg_common.t
+t/13db2_common.t
+t/dbixcl_common_tests.pm

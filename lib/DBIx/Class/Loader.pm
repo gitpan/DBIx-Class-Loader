@@ -3,7 +3,7 @@ package DBIx::Class::Loader;
 use strict;
 use UNIVERSAL::require;
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 =head1 NAME
 
@@ -24,7 +24,8 @@ DBIx::Class::Loader - Dynamic definition of DBIx::Class sub classes.
     constraint              => '^foo.*',
     relationships           => 1,
     options                 => { AutoCommit => 1 }, 
-    inflect                 => { child => 'children' }
+    inflect                 => { child => 'children' },
+    debug                   => 1,
   );
   my $class = $loader->find_class('film'); # $class => Data::Film
   my $obj = $class->find(1);
@@ -70,6 +71,16 @@ L<DBIx::Class::Loader::Generic> for more, and L<DBIx::Class::Loader::Writing>
 for notes on writing your own db-specific subclass for an unsupported db.
 
 L<Class::DBI::Loader> and L<Class::DBI> are now obsolete, use L<DBIx::Class> and this module instead. ;)
+
+=cut
+
+=head1 METHODS
+
+=head2 new
+
+Example in Synopsis above demonstrates the available arguments.  For
+detailed information on the arguments, see the
+L<DBIx::Class::Loader::Generic> documentation.
 
 =cut
 

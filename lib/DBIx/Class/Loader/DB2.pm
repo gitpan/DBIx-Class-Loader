@@ -71,7 +71,8 @@ SQL
 
     $sth->execute($schema, $tabname) or die;
     my @cols = map { @$_ } @{$sth->fetchall_arrayref};
-    my $sth = $dbh->prepare(<<'SQL') or die;
+
+    $sth = $dbh->prepare(<<'SQL') or die;
 SELECT kcu.COLNAME
 FROM SYSCAT.TABCONST as tc
 JOIN SYSCAT.KEYCOLUSE as kcu ON tc.constname = kcu.constname

@@ -75,6 +75,13 @@ Username.
 
 =cut
 
+=head3 new
+
+Not intended to be called directly.  This is used internally by the
+C<new()> method in L<DBIx::Class::Loader>.
+
+=cut
+
 sub new {
     my ( $class, %args ) = @_;
     if ( $args{debug} ) {
@@ -165,29 +172,47 @@ sub _belongs_to_many {
     my ( $self, $table, $column, $other, $other_column ) = @_;
     my $table_class = $self->find_class($table);
     my $other_class = $self->find_class($other);
+
     warn qq/\# Belongs_to relationship\n/ if $self->debug;
+
     if($other_column) {
         warn qq/$table_class->belongs_to( '$column' => '$other_class',/
-          .  qq/ { "foreign.$other_column" => "self.$column" } );\n\n/
+          .  qq/ { "foreign.$other_column" => "self.$column" },/
+          .  qq/ { accessor => 'filter' });\n\n/
           if $self->debug;
         $table_class->belongs_to( $column => $other_class, 
-          { "foreign.$other_column" => "self.$column" } );
+          { "foreign.$other_column" => "self.$column" },
+          { accessor => 'filter' }
+        );
     }
     else {
         warn qq/$table_class->belongs_to( '$column' => '$other_class' );\n\n/
           if $self->debug;
         $table_class->belongs_to( $column => $other_class );
     }
+
     my ($table_class_base) = $table_class =~ /.*::(.+)/;
     my $plural = Lingua::EN::Inflect::PL( lc $table_class_base );
     $plural = $self->{_inflect}->{ lc $table_class_base }
       if $self->{_inflect}
       and exists $self->{_inflect}->{ lc $table_class_base };
+
     warn qq/\# Has_many relationship\n/ if $self->debug;
-    warn
-      qq/$other_class->has_many( '$plural' => '$table_class', '$column' );\n\n/
-      if $self->debug;
-    $other_class->has_many( $plural => $table_class, $column );
+
+    if($other_column) {
+        warn qq/$other_class->has_many( '$plural' => '$table_class',/
+          .  qq/ { "foreign.$column" => "self.$other_column" } );\n\n/
+          if $self->debug;
+        $other_class->has_many( $plural => $table_class,
+                                { "foreign.$column" => "self.$other_column" }
+                              );
+    }
+    else {
+        warn qq/$other_class->has_many( '$plural' => '$table_class',/
+          .  qq/'$other_column' );\n\n/
+          if $self->debug;
+        $other_class->has_many( $plural => $table_class, $column );
+    }
 }
 
 # Load and setup classes
@@ -245,15 +270,17 @@ sub _relationships {
     my $self = shift;
     foreach my $table ( $self->tables ) {
         my $dbh = $self->find_class($table)->storage->dbh;
+        my $quoter = $dbh->get_info(29) || q{"};
         if ( my $sth = $dbh->foreign_key_info( '', '', '', '', '', $table ) ) {
             for my $res ( @{ $sth->fetchall_arrayref( {} ) } ) {
                 my $column = $res->{FK_COLUMN_NAME};
                 my $other  = $res->{UK_TABLE_NAME};
                 my $other_column  = $res->{UK_COLUMN_NAME};
-                $column =~ s/"//g;
-                $other =~ s/"//g;
+                $column =~ s/$quoter//g;
+                $other =~ s/$quoter//g;
+                $other_column =~ s/$quoter//g;
                 eval { $self->_belongs_to_many( $table, $column, $other,
-		  $other_column ) };
+                  $other_column ) };
                 warn qq/\# belongs_to_many failed "$@"\n\n/
                   if $@ && $self->debug;
             }
