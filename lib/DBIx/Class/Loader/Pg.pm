@@ -38,9 +38,13 @@ sub _db_classes {
 sub _tables {
     my $self = shift;
     my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
-    my @tables = $DBD::Pg::VERSION >= 1.31 ? 
+
+    # This is split out to avoid version parsing errors...
+    my $is_dbd_pg_gte_131 = ( $DBD::Pg::VERSION >= 1.31 );
+    my @tables = $is_dbd_pg_gte_131 ? 
         $dbh->tables( undef, $SCHEMA, "", "table", { noprefix => 1, pg_noprefix => 1 } )
         : $dbh->tables;
+
     $dbh->disconnect;
     s/"//g for @tables;
     return @tables;

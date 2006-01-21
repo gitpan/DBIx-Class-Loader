@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.14  Sat Jan 21 00:05:11 2006
+        - Bugfix to pgsql tests
+        - Bugfix for pause/cpan module version parsing
+
 0.13  Thu Jan 19 06:40:11 2006
         - Test suite infrastructure overhauled
         - New advanced relationship testing [chisel]

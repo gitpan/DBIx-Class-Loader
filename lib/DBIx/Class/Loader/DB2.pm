@@ -40,7 +40,10 @@ sub _tables {
     my %args = @_; 
     my $schema = uc ($args{schema} || '');
     my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
-    my @tables = $DBD::DB2::VERSION >= 1.14 ? 
+
+    # this is split out to avoid version parsing errors...
+    my $is_dbd_db2_gte_114 = ( $DBD::DB2::VERSION >= 1.14 );
+    my @tables = $is_dbd_db2_gte_114 ? 
     $dbh->tables( { TABLE_SCHEM => '%', TABLE_TYPE => 'TABLE,VIEW' } )
         : $dbh->tables;
     $dbh->disconnect;
