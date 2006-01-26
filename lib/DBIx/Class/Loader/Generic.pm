@@ -106,7 +106,7 @@ sub new {
         _exclude         => $args{exclude},
         _relationships   => $args{relationships},
         _inflect         => $args{inflect},
-        _schema          => $args{schema},
+        _schema          => $args{schema} ||'',
         _dropschema      => $args{dropschema},
         CLASSES          => {},
     }, $class;
@@ -222,9 +222,6 @@ sub _load_classes {
     my @tables          = $self->_tables(@schema);
     my @db_classes      = $self->_db_classes();
     my $additional      = join '', map "use $_;\n", @{ $self->{_additional} };
-    my $additional_base = join '', map "use base '$_';\n",
-      @{ $self->{_additional_base} };
-    my $left_base  = join '', map "use base '$_';\n", @{ $self->{_left_base} };
     my $constraint = $self->{_constraint};
     my $exclude    = $self->{_exclude};
 
@@ -245,6 +242,16 @@ sub _load_classes {
         $self->inject_base( $class, $dbclass, 'DBIx::Class::Core' );
         $_->require for @db_classes;
         $self->inject_base( $class, $_ ) for @db_classes;
+
+        my $code = "package $class;\n$additional";
+        eval $code;
+        croak qq/Couldn't load additional classes "$@"/ if $@;
+
+        $_->require for @{$self->{_additional_base}};
+        $self->inject_base( $class, $_) for @{$self->{_additional_base}};
+        $_->require for @{$self->{_left_base}};
+        $self->inject_base( $class, $_) for @{$self->{_left_base}};
+
         warn qq/\# Initializing table "$table" as "$class"\n/ if $self->debug;
         $class->table(lc $tablename);
         my ( $cols, $pks ) = $self->_table_info($table);
@@ -252,16 +259,11 @@ sub _load_classes {
         $class->add_columns(@$cols);
         $class->set_primary_key(@$pks) if @$pks;
         $self->{CLASSES}->{lc $tablename} = $class;
-        my $code = "package $class;\n$additional_base$additional$left_base";
-        warn qq/$code/                        if $self->debug;
         warn qq/$class->table('$tablename');\n/ if $self->debug;
         my $columns = join "', '", @$cols;
         warn qq/$class->add_columns('$columns')\n/ if $self->debug;
         my $primaries = join "', '", @$pks;
         warn qq/$class->set_primary_key('$primaries')\n/ if $self->debug && @$pks;
-        eval $code;
-        croak qq/Couldn't load additional classes "$@"/ if $@;
-        unshift @{"$class\::ISA"}, $_ foreach ( @{ $self->{_left_base} } );
     }
 }
 
@@ -271,11 +273,11 @@ sub _relationships {
     foreach my $table ( $self->tables ) {
         my $dbh = $self->find_class($table)->storage->dbh;
         my $quoter = $dbh->get_info(29) || q{"};
-        if ( my $sth = $dbh->foreign_key_info( '', '', '', '', '', $table ) ) {
+        if ( my $sth = $dbh->foreign_key_info( '', $self->{schema}, '', '', '', $table ) ) {
             for my $res ( @{ $sth->fetchall_arrayref( {} ) } ) {
-                my $column = $res->{FK_COLUMN_NAME};
-                my $other  = $res->{UK_TABLE_NAME};
-                my $other_column  = $res->{UK_COLUMN_NAME};
+                my $column = lc $res->{FK_COLUMN_NAME};
+                my $other  = lc $res->{UK_TABLE_NAME};
+                my $other_column  = lc $res->{UK_COLUMN_NAME};
                 $column =~ s/$quoter//g;
                 $other =~ s/$quoter//g;
                 $other_column =~ s/$quoter//g;

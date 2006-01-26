@@ -73,8 +73,8 @@ sub _tables {
     my $self = shift;
     my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
     my @tables;
+    my $quoter = $dbh->get_info(29) || q{`};
     foreach my $table ( $dbh->tables ) {
-        my $quoter = $dbh->get_info(29);
         $table =~ s/$quoter//g if ($quoter);
         push @tables, $1
           if $table =~ /\A(\w+)\z/;

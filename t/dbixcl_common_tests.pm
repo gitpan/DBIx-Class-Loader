@@ -22,6 +22,8 @@ sub new {
     # Only MySQL uses this
     $self->{innodb} ||= '';
 
+    $self->{verbose} = $ENV{TEST_VERBOSE} || 0;
+
     return bless $self => $class;
 }
 
@@ -40,14 +42,22 @@ sub run_tests {
 
     my $namespace = 'DBIXCL_Test_' . $self->{vendor};
 
-    my $loader = DBIx::Class::Loader->new(
-         dsn           => $self->{dsn},
-         user          => $self->{user},
-         password      => $self->{password},
-         namespace     => $namespace,
-         constraint    => '^loader_test.*',
-         relationships => 1,
+    my $debug = ($self->{verbose} > 1) ? 1 : 0;
+
+    my %loader_opts = (
+        dsn           => $self->{dsn},
+        user          => $self->{user},
+        password      => $self->{password},
+        namespace     => $namespace,
+        constraint    => '^(?:\S+\.)?(?i:loader_test)[0-9]+$',
+        relationships => 1,
+        debug         => $debug,
     );
+
+    $loader_opts{schema} = $self->{schema} if $self->{schema};
+    $loader_opts{dropschema} = $self->{dropschema} if $self->{dropschema};
+
+    my $loader = DBIx::Class::Loader->new(%loader_opts);
 
     my $class1 = $loader->find_class("loader_test1");
     my $class2 = $loader->find_class("loader_test2");
@@ -164,7 +174,7 @@ sub run_tests {
 sub dbconnect {
     my ($self, $complain) = @_;
 
-    DBI->connect(
+    my $dbh = DBI->connect(
          $self->{dsn}, $self->{user},
          $self->{password},
          {
@@ -173,6 +183,10 @@ sub dbconnect {
              AutoCommit => 1,
          }
     );
+
+    die "Failed to connect to database: $DBI::errstr" if !$dbh;
+
+    return $dbh;
 }
 
 sub create {
@@ -232,9 +246,9 @@ sub create {
 
         qq{
             CREATE TABLE loader_test5 (
-                id1 INTEGER,
-                id2 INTEGER, -- , id2 INTEGER REFERENCES loader_test1,
-                dat TEXT,
+                id1 INTEGER NOT NULL,
+                id2 INTEGER NOT NULL, -- , id2 INTEGER REFERENCES loader_test1,
+                dat VARCHAR(8),
                 PRIMARY KEY (id1,id2)
             ) $self->{innodb};
         },
@@ -246,7 +260,7 @@ sub create {
                 id $self->{auto_inc_pk},
                 id2 INTEGER,
                 loader_test2 INTEGER,
-                dat TEXT,
+                dat VARCHAR(8),
                 FOREIGN KEY (loader_test2) REFERENCES loader_test2 (id),
                 FOREIGN KEY (id, id2 ) REFERENCES loader_test5 (id1,id2)
             ) $self->{innodb};
@@ -259,7 +273,7 @@ sub create {
             CREATE TABLE loader_test7 (
                 id INTEGER NOT NULL PRIMARY KEY,
                 id2 VARCHAR(8) NOT NULL UNIQUE,
-                dat TEXT
+                dat VARCHAR(8)
             ) $self->{innodb};
         },
 
@@ -269,7 +283,7 @@ sub create {
             CREATE TABLE loader_test8 (
                 id INTEGER NOT NULL PRIMARY KEY,
                 loader_test7 VARCHAR(8) NOT NULL,
-                dat TEXT,
+                dat VARCHAR(8),
                 FOREIGN KEY (loader_test7) REFERENCES loader_test7 (id2)
             ) $self->{innodb};
         },
@@ -279,7 +293,7 @@ sub create {
 
         qq{
             CREATE TABLE loader_test9 (
-                loader_test9 TEXT NOT NULL
+                loader_test9 VARCHAR(8) NOT NULL
             ) $self->{innodb};
         },
     );
@@ -297,7 +311,7 @@ sub create {
             CREATE TABLE loader_test11 (
                 id11 $self->{auto_inc_pk},
                 message VARCHAR(8) DEFAULT 'foo',
-                loader_test10 INTEGER NOT NULL,
+                loader_test10 INTEGER,
                 FOREIGN KEY (loader_test10) REFERENCES loader_test10 (id10)
             ) $self->{innodb};
         },
@@ -307,11 +321,19 @@ sub create {
          q{ REFERENCES loader_test11 (id11); }),
     );
 
+    $self->drop_tables;
+
     $self->{created} = 1;
 
     my $dbh = $self->dbconnect(1);
     $dbh->do($_) for (@statements);
     unless($self->{skip_rels}) {
+        # hack for now, since DB2 doesn't like inline comments, and we need
+        # to test one for mysql, which works on everyone else...
+        # this all needs to be refactored anyways.
+        if($self->{vendor} =~ /DB2/i) {
+            @statements_reltests = map { s/--.*\n//; $_ } @statements_reltests;
+        }
         $dbh->do($_) for (@statements_reltests);
         unless($self->{vendor} =~ /sqlite/i) {
             $dbh->do($_) for (@statements_advanced);
@@ -320,7 +342,7 @@ sub create {
     $dbh->disconnect();
 }
 
-sub DESTROY {
+sub drop_tables {
     my $self = shift;
 
     return unless $self->{created};
@@ -366,7 +388,9 @@ sub DESTROY {
         }
     }
     $dbh->do("DROP TABLE $_") for (@tables);
-    $dbh->disconnect();
+    $dbh->disconnect;
 }
+
+sub DESTROY { shift->drop_tables; }
 
 1;

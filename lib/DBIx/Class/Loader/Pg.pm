@@ -42,7 +42,7 @@ sub _tables {
     # This is split out to avoid version parsing errors...
     my $is_dbd_pg_gte_131 = ( $DBD::Pg::VERSION >= 1.31 );
     my @tables = $is_dbd_pg_gte_131 ? 
-        $dbh->tables( undef, $SCHEMA, "", "table", { noprefix => 1, pg_noprefix => 1 } )
+        $dbh->tables( undef, $self->{_schema}, "", "table", { noprefix => 1, pg_noprefix => 1 } )
         : $dbh->tables;
 
     $dbh->disconnect;
@@ -54,11 +54,11 @@ sub _table_info {
     my ( $self, $table ) = @_;
     my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
 
-    my $sth = $dbh->column_info(undef, $SCHEMA, $table, undef);
+    my $sth = $dbh->column_info(undef, $self->{_schema}, $table, undef);
     my @cols = map { $_->[3] } @{ $sth->fetchall_arrayref };
     s/"//g for @cols;
     
-    my @primary = $dbh->primary_key(undef, $SCHEMA, $table);
+    my @primary = $dbh->primary_key(undef, $self->{_schema}, $table);
 
     $dbh->disconnect;
 

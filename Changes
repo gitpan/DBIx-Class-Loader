@@ -1,5 +1,14 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.15  Thu Jan 26 02:05:30 2006
+        - tons of DB2-related fixes
+        - better schema support for postgres
+        - bugfix to sqlite pk-finding
+        - test updates/fixes
+        - fixes for injecting base classes
+        - mysql quoting detection more reliable
+        - DBIx::Class dependency bumped to 0.04001
+
 0.14  Sat Jan 21 00:05:11 2006
         - Bugfix to pgsql tests
         - Bugfix for pause/cpan module version parsing

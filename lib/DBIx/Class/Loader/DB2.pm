@@ -29,10 +29,18 @@ DBIx::Class::Loader::DB2 - DBIx::Class::Loader DB2 Implementation.
 
 See L<DBIx::Class::Loader>.
 
+=head1 KNOW ISSUES
+
+L<DBIx::Class::Loader::DB2> will not pass test suites (nor work quite
+completely for applications) with L<DBIx::Class> versions less than
+0.05.  This is because prior to that release, there was no
+L<DBIx::Class::PK::Auto::DB2>.  As long as you don't use any
+auto-incrementing primary keys, things should be sane though.
+
 =cut
 
 sub _db_classes {
-   return ();
+    return qw/DBIx::Class::PK::Auto::DB2/;
 }
 
 sub _tables {
@@ -47,6 +55,7 @@ sub _tables {
     $dbh->tables( { TABLE_SCHEM => '%', TABLE_TYPE => 'TABLE,VIEW' } )
         : $dbh->tables;
     $dbh->disconnect;
+
     # People who use table or schema names that aren't identifiers deserve
     # what they get.  Still, FIXME?
     s/\"//g for @tables;
@@ -73,7 +82,8 @@ WHERE c.TABSCHEMA = ? and c.TABNAME = ?
 SQL
 
     $sth->execute($schema, $tabname) or die;
-    my @cols = map { @$_ } @{$sth->fetchall_arrayref};
+    my @cols = map { lc $_ } map { @$_ } @{$sth->fetchall_arrayref};
+    $sth->finish;
 
     $sth = $dbh->prepare(<<'SQL') or die;
 SELECT kcu.COLNAME
@@ -83,12 +93,44 @@ WHERE tc.TABSCHEMA = ? and tc.TABNAME = ? and tc.TYPE = 'P'
 SQL
 
     $sth->execute($schema, $tabname) or die;
-    $dbh->disconnect;
 
-    my @pri = map { @$_ } @{$sth->fetchall_arrayref};
+    my @pri = map { lc $_ } map { @$_ } @{$sth->fetchall_arrayref};
+
+    $sth->finish;
+    $dbh->disconnect;
     
     return ( \@cols, \@pri );
 }
+
+# Find and setup relationships
+sub _relationships {
+    my $self = shift;
+
+    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    $dbh->{RaiseError} = 1;
+    my $sth = $dbh->prepare(<<'SQL') or die;
+SELECT SR.COLCOUNT, SR.REFTBNAME, SR.PKCOLNAMES, SR.FKCOLNAMES
+FROM SYSIBM.SYSRELS SR WHERE SR.TBNAME = ?
+SQL
+
+    foreach my $table ( $self->tables ) {
+        if ($sth->execute(uc $table)) {
+            while(my $res = $sth->fetchrow_arrayref()) {
+                my ($colcount, $other, $other_column, $column) =
+                    map { $_=lc; s/^\s+//; s/\s+$//; $_; } @$res;
+                next if $colcount != 1; # XXX no multi-col FK support yet
+                eval { $self->_belongs_to_many( $table, $column, $other,
+                  $other_column ) };
+                warn qq/\# belongs_to_many failed "$@"\n\n/
+                  if $@ && $self->debug;
+            }
+        }
+    }
+
+    $sth->finish;
+    $dbh->disconnect;
+}
+
 
 =head1 SEE ALSO
 
