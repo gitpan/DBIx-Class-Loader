@@ -12,7 +12,7 @@ my $skip_rels_msg = 'You need to set the MYSQL_TEST_INNODB environment variable 
 my $tester = dbixcl_common_tests->new(
     vendor          => 'Mysql',
     auto_inc_pk     => 'INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT',
-    innodb          => q{Engine='InnoDB'},
+    innodb          => $test_innodb ? q{Engine=InnoDB} : 0,
     dsn             => "dbi:mysql:$database",
     user            => $user,
     password        => $password,

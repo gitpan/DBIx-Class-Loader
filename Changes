@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.16  Tue Jan 31 03:33:48 2006
+        - Fixed tests on non-innodb mysql installations
+        - do ->storage->dbh->disconnect when done loading
+        - croak if required args namespace or dsn not specified
+
 0.15  Thu Jan 26 02:05:30 2006
         - tons of DB2-related fixes
         - better schema support for postgres

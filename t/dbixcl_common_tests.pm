@@ -339,7 +339,7 @@ sub create {
             $dbh->do($_) for (@statements_advanced);
         }
     }
-    $dbh->disconnect();
+    $dbh->disconnect;
 }
 
 sub drop_tables {

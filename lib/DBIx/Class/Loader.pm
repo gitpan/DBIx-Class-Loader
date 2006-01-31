@@ -1,9 +1,10 @@
 package DBIx::Class::Loader;
 
 use strict;
+use Carp;
 use UNIVERSAL::require;
 
-our $VERSION = '0.15';
+our $VERSION = '0.16';
 
 =head1 NAME
 
@@ -56,8 +57,8 @@ in your web application.
 DBIx::Class::Loader automate the definition of DBIx::Class sub-classes by
 scanning table schemas and setting up columns and primary keys.
 
-Class names are defined by table names and the namespace option, which is
-required.
+Class names are defined by table names and the namespace option.  The only
+required arguments are C<namespace> and C<dsn>.
 
  +---------+-----------+--------------+
  | table   | namespace | class        |
@@ -86,12 +87,20 @@ L<DBIx::Class::Loader::Generic> documentation.
 
 sub new {
     my ( $class, %args ) = @_;
+
+    foreach (qw/dsn namespace/) {
+        croak qq/Argument '$_' is required/ unless defined($args{$_});
+    }
+
     my $dsn = $args{dsn};
+
     my ($driver) = $dsn =~ m/^dbi:(\w*?)(?:\((.*?)\))?:/i;
     $driver = 'SQLite' if $driver eq 'SQLite2';
     my $impl = "DBIx::Class::Loader::" . $driver;
     $impl->require or
-    die qq/Couldn't require loader class "$impl", "$UNIVERSAL::require::ERROR"/;
+      croak qq/Couldn't require loader class "$impl"/
+          . qq/, "$UNIVERSAL::require::ERROR"/;
+
     return $impl->new(%args);
 }
 

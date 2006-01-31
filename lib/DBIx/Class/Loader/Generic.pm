@@ -111,9 +111,10 @@ sub new {
         CLASSES          => {},
     }, $class;
     warn qq/\### START DBIx::Class::Loader dump ###\n/ if $self->debug;
-    $self->_load_classes;
+    my $dbclass = $self->_load_classes;
     $self->_relationships                            if $self->{_relationships};
     warn qq/\### END DBIx::Class::Loader dump ###\n/ if $self->debug;
+    $dbclass->storage->dbh->disconnect;
     $self;
 }
 
@@ -265,6 +266,8 @@ sub _load_classes {
         my $primaries = join "', '", @$pks;
         warn qq/$class->set_primary_key('$primaries')\n/ if $self->debug && @$pks;
     }
+
+    return $dbclass;
 }
 
 # Find and setup relationships

@@ -8,7 +8,6 @@ lib/DBIx/Class/Loader/SQLite.pm
 lib/DBIx/Class/Loader/Writing.pm
 Makefile.PL
 MANIFEST			This list of files
-META.yml
 t/01use.t
 t/02pod.t
 t/03podcoverage.t
@@ -17,3 +16,4 @@ t/11mysql_common.t
 t/12pg_common.t
 t/13db2_common.t
 t/dbixcl_common_tests.pm
+META.yml                                 Module meta-data (added by MakeMaker)
