@@ -5,8 +5,6 @@ use base 'DBIx::Class::Loader::Generic';
 use DBI;
 use Carp;
 
-our $SCHEMA = 'public';
-
 =head1 NAME
 
 DBIx::Class::Loader::Pg - DBIx::Class::Loader Postgres Implementation.
@@ -37,6 +35,11 @@ sub _db_classes {
 
 sub _tables {
     my $self = shift;
+
+    $self->{_schema} ||= 'public'; # XXX this should be in an override of ->new().
+                                   # the issue is that ::Generic actually does all
+                                   # of its work in ->new(), rather than later.
+
     my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
 
     # This is split out to avoid version parsing errors...
