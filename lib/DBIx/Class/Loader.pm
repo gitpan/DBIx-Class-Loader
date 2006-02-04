@@ -4,7 +4,7 @@ use strict;
 use Carp;
 use UNIVERSAL::require;
 
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 =head1 NAME
 
@@ -51,6 +51,14 @@ in your web application.
   # you can use Data::Film directly
   my $film = Data::Film->retrieve($id);
 
+=head1 IMPORTANT NOTICE
+
+This module is deprecated in favor of L<DBIx::Class::Schema::Loader> for
+use with L<DBIx::Class> versions 0.05 and higher.  It continues to
+function as well as it ever did, even for recent L<DBIx::Class> releases,
+and will be maintained for some time to counter bugs, but it doesn't use
+the now-preferred L<DBIx::Class::Schema> way of doing things, and tends
+to promote bad L<DBIx::Class> usage habits.
 
 =head1 DESCRIPTION
 
@@ -70,8 +78,6 @@ required arguments are C<namespace> and C<dsn>.
 DBIx::Class::Loader supports MySQL, Postgres, SQLite and DB2.  See
 L<DBIx::Class::Loader::Generic> for more, and L<DBIx::Class::Loader::Writing>
 for notes on writing your own db-specific subclass for an unsupported db.
-
-L<Class::DBI::Loader> and L<Class::DBI> are now obsolete, use L<DBIx::Class> and this module instead. ;)
 
 =cut
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.18  Sat Feb 04 00:18:58 2006
+        - Docs updates, including module deprecation notice
+
 0.17  Fri Feb 03 01:45:27 2006
         - Set postgresql default schema back to 'public' instead of ''
 
