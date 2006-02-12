@@ -37,18 +37,10 @@ sub _db_classes {
 sub _relationships {
     my $self   = shift;
     my @tables = $self->tables;
-    my $dbh    = $self->find_class( $tables[0] )->storage->dbh;
-    my $dsn    = $self->{_datasource}[0];
-    my %conn   =
-      $dsn =~ m/\Adbi:\w+(?:\(.*?\))?:(.+)\z/i
-      && index( $1, '=' ) >= 0
-      ? split( /[=;]/, $1 )
-      : ( database => $1 );
-    my $dbname = $conn{database} || $conn{dbname} || $conn{db};
-    die("Can't figure out the table name automatically.") if !$dbname;
+    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
 
     foreach my $table (@tables) {
-        my $query = "SHOW CREATE TABLE ${dbname}.${table}";
+        my $query = "SHOW CREATE TABLE ${table}";
         my $sth   = $dbh->prepare($query)
           or die("Cannot get table definition: $table");
         $sth->execute;

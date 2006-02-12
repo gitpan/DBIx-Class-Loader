@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.19  Sun Feb 12 22:24:32 2006
+        - No longer tries to parse out the table name from the dsn for mysql,
+          was unneccesary vestigial code from previous method.
+
 0.18  Sat Feb 04 00:18:58 2006
         - Docs updates, including module deprecation notice
 
