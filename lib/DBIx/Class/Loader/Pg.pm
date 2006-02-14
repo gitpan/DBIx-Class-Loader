@@ -2,7 +2,6 @@ package DBIx::Class::Loader::Pg;
 
 use strict;
 use base 'DBIx::Class::Loader::Generic';
-use DBI;
 use Carp;
 
 =head1 NAME
@@ -40,7 +39,7 @@ sub _tables {
                                    # the issue is that ::Generic actually does all
                                    # of its work in ->new(), rather than later.
 
-    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    my $dbh = $self->{storage}->dbh;
 
     # This is split out to avoid version parsing errors...
     my $is_dbd_pg_gte_131 = ( $DBD::Pg::VERSION >= 1.31 );
@@ -48,22 +47,19 @@ sub _tables {
         $dbh->tables( undef, $self->{_schema}, "", "table", { noprefix => 1, pg_noprefix => 1 } )
         : $dbh->tables;
 
-    $dbh->disconnect;
     s/"//g for @tables;
     return @tables;
 }
 
 sub _table_info {
     my ( $self, $table ) = @_;
-    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    my $dbh = $self->{storage}->dbh;
 
     my $sth = $dbh->column_info(undef, $self->{_schema}, $table, undef);
     my @cols = map { $_->[3] } @{ $sth->fetchall_arrayref };
     s/"//g for @cols;
     
     my @primary = $dbh->primary_key(undef, $self->{_schema}, $table);
-
-    $dbh->disconnect;
 
     s/"//g for @primary;
 

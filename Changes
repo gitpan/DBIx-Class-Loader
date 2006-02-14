@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.20  Tue Feb 14 18:26:31 2006
+        - Added correct bug contact info
+        - Vendor modules now use ->storage
+
 0.19  Sun Feb 12 22:24:32 2006
         - No longer tries to parse out the table name from the dsn for mysql,
           was unneccesary vestigial code from previous method.

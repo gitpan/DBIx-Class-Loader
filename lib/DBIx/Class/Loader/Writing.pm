@@ -16,7 +16,6 @@ DBIx::Class::Loader::Writing - Loader subclass writing guide
 
   use strict;
   use base 'DBIx::Class::Loader::Generic';
-  use DBI;
   use Carp;
 
   sub _db_classes {
@@ -26,8 +25,7 @@ DBIx::Class::Loader::Writing - Loader subclass writing guide
 
   sub _tables {
       my $self = shift;
-      my $dbh = DBI->connect( @{ $self->{_datasource} } )
-           or croak($DBI::errstr);
+      my $dbh = $self->{storage}->dbh;
       return $dbh->tables; # Your DBD may need something different
   }
 

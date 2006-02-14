@@ -4,7 +4,7 @@ use strict;
 use Carp;
 use UNIVERSAL::require;
 
-our $VERSION = '0.19';
+our $VERSION = '0.20';
 
 =head1 NAME
 
@@ -109,6 +109,12 @@ sub new {
 
     return $impl->new(%args);
 }
+
+=head1 SUPPORT
+
+Bug reports to Brandon L Black C<blblack@gmail.com>,
+or the mailing list dbix-class@lists.rawmode.org,
+or visit #dbix-class on irc.perl.org.
 
 =head1 AUTHOR
 

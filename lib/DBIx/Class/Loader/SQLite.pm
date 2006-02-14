@@ -3,7 +3,6 @@ package DBIx::Class::Loader::SQLite;
 use strict;
 use base 'DBIx::Class::Loader::Generic';
 use Text::Balanced qw( extract_bracketed );
-use DBI;
 use Carp;
 
 =head1 NAME
@@ -36,7 +35,7 @@ sub _relationships {
     my $self = shift;
     foreach my $table ( $self->tables ) {
 
-        my $dbh = $self->find_class($table)->storage->dbh;
+        my $dbh = $self->{storage}->dbh;
         my $sth = $dbh->prepare(<<"");
 SELECT sql FROM sqlite_master WHERE tbl_name = ?
 
@@ -93,7 +92,7 @@ SELECT sql FROM sqlite_master WHERE tbl_name = ?
 
 sub _tables {
     my $self = shift;
-    my $dbh  = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    my $dbh  = $self->{storage}->dbh;
     my $sth  = $dbh->prepare("SELECT * FROM sqlite_master");
     $sth->execute;
     my @tables;
@@ -101,7 +100,6 @@ sub _tables {
         next unless lc( $row->{type} ) eq 'table';
         push @tables, $row->{tbl_name};
     }
-    $dbh->disconnect;
     return @tables;
 }
 
@@ -109,7 +107,7 @@ sub _table_info {
     my ( $self, $table ) = @_;
 
     # find all columns.
-    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    my $dbh = $self->{storage}->dbh;
     my $sth = $dbh->prepare("PRAGMA table_info('$table')");
     $sth->execute();
     my @columns;
@@ -125,7 +123,6 @@ SQL
     $sth->execute($table);
     my ($sql) = $sth->fetchrow_array;
     $sth->finish;
-    $dbh->disconnect;
     my ($primary) = $sql =~ m/
     (?:\(|\,) # either a ( to start the definition or a , for next
     \s*       # maybe some whitespace

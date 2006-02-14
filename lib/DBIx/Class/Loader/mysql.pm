@@ -2,7 +2,6 @@ package DBIx::Class::Loader::mysql;
 
 use strict;
 use base 'DBIx::Class::Loader::Generic';
-use DBI;
 use Carp;
 
 =head1 NAME
@@ -37,7 +36,7 @@ sub _db_classes {
 sub _relationships {
     my $self   = shift;
     my @tables = $self->tables;
-    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    my $dbh = $self->{storage}->dbh;
 
     foreach my $table (@tables) {
         my $query = "SHOW CREATE TABLE ${table}";
@@ -63,7 +62,7 @@ sub _relationships {
 
 sub _tables {
     my $self = shift;
-    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    my $dbh = $self->{storage}->dbh;
     my @tables;
     my $quoter = $dbh->get_info(29) || q{`};
     foreach my $table ( $dbh->tables ) {
@@ -71,13 +70,12 @@ sub _tables {
         push @tables, $1
           if $table =~ /\A(\w+)\z/;
     }
-    $dbh->disconnect;
     return @tables;
 }
 
 sub _table_info {
     my ( $self, $table ) = @_;
-    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    my $dbh = $self->{storage}->dbh;
 
     # MySQL 4.x doesn't support quoted tables
     my $query = "DESCRIBE $table";
@@ -90,7 +88,6 @@ sub _table_info {
         push @pri, $col if $hash->{Key} eq "PRI";
     }
 
-    $dbh->disconnect;
     return ( \@cols, \@pri );
 }
 

@@ -2,7 +2,6 @@ package DBIx::Class::Loader::DB2;
 
 use strict;
 use base 'DBIx::Class::Loader::Generic';
-use DBI;
 use Carp;
 
 =head1 NAME
@@ -47,14 +46,13 @@ sub _tables {
     my $self = shift;
     my %args = @_; 
     my $schema = uc ($args{schema} || '');
-    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    my $dbh = $self->{storage}->dbh;
 
     # this is split out to avoid version parsing errors...
     my $is_dbd_db2_gte_114 = ( $DBD::DB2::VERSION >= 1.14 );
     my @tables = $is_dbd_db2_gte_114 ? 
     $dbh->tables( { TABLE_SCHEM => '%', TABLE_TYPE => 'TABLE,VIEW' } )
         : $dbh->tables;
-    $dbh->disconnect;
 
     # People who use table or schema names that aren't identifiers deserve
     # what they get.  Still, FIXME?
@@ -72,7 +70,7 @@ sub _table_info {
     # print "Schema: $schema, Table: $tabname\n";
     
     # FIXME: Horribly inefficient and just plain evil. (JMM)
-    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    my $dbh = $self->{storage}->dbh;
     $dbh->{RaiseError} = 1;
 
     my $sth = $dbh->prepare(<<'SQL') or die;
@@ -97,7 +95,6 @@ SQL
     my @pri = map { lc $_ } map { @$_ } @{$sth->fetchall_arrayref};
 
     $sth->finish;
-    $dbh->disconnect;
     
     return ( \@cols, \@pri );
 }
@@ -106,7 +103,7 @@ SQL
 sub _relationships {
     my $self = shift;
 
-    my $dbh = DBI->connect( @{ $self->{_datasource} } ) or croak($DBI::errstr);
+    my $dbh = $self->{storage}->dbh;
     $dbh->{RaiseError} = 1;
     my $sth = $dbh->prepare(<<'SQL') or die;
 SELECT SR.COLCOUNT, SR.REFTBNAME, SR.PKCOLNAMES, SR.FKCOLNAMES
@@ -128,7 +125,6 @@ SQL
     }
 
     $sth->finish;
-    $dbh->disconnect;
 }
 
 

@@ -220,7 +220,6 @@ sub _belongs_to_many {
 sub _load_classes {
     my $self            = shift;
     my @schema          = ('schema' => $self->{_schema}) if($self->{_schema});
-    my @tables          = $self->_tables(@schema);
     my @db_classes      = $self->_db_classes();
     my $additional      = join '', map "use $_;\n", @{ $self->{_additional} };
     my $constraint = $self->{_constraint};
@@ -230,6 +229,9 @@ sub _load_classes {
     my $dbclass   = "$namespace\::_db";
     $self->inject_base( $dbclass, 'DBIx::Class::DB' );
     $dbclass->connection( @{ $self->{_datasource} } );
+    $self->{storage} = $dbclass->storage;
+
+    my @tables          = $self->_tables(@schema);
 
     foreach my $table (@tables) {
         next unless $table =~ /$constraint/;
@@ -274,7 +276,7 @@ sub _load_classes {
 sub _relationships {
     my $self = shift;
     foreach my $table ( $self->tables ) {
-        my $dbh = $self->find_class($table)->storage->dbh;
+        my $dbh = $self->{storage}->dbh;
         my $quoter = $dbh->get_info(29) || q{"};
         if ( my $sth = $dbh->foreign_key_info( '', $self->{schema}, '', '', '', $table ) ) {
             for my $res ( @{ $sth->fetchall_arrayref( {} ) } ) {
