@@ -222,6 +222,10 @@ sub _load_classes {
     my @schema          = ('schema' => $self->{_schema}) if($self->{_schema});
     my @db_classes      = $self->_db_classes();
     my $additional      = join '', map "use $_;\n", @{ $self->{_additional} };
+    my $additional_base = join '', map "use base '$_';\n",
+                              @{ $self->{_additional_base} };
+    my $left_base       = join '', map "use base '$_';\n",
+                              @{ $self->{_left_base} };
     my $constraint = $self->{_constraint};
     my $exclude    = $self->{_exclude};
 
@@ -246,14 +250,12 @@ sub _load_classes {
         $_->require for @db_classes;
         $self->inject_base( $class, $_ ) for @db_classes;
 
-        my $code = "package $class;\n$additional";
+	my $code = "package $class;\n$additional_base$additional$left_base";
         eval $code;
         croak qq/Couldn't load additional classes "$@"/ if $@;
 
-        $_->require for @{$self->{_additional_base}};
-        $self->inject_base( $class, $_) for @{$self->{_additional_base}};
-        $_->require for @{$self->{_left_base}};
-        $self->inject_base( $class, $_) for @{$self->{_left_base}};
+        # force a C3 re-init via inject_base, for the above new bases
+	$self->inject_base( $class );
 
         warn qq/\# Initializing table "$table" as "$class"\n/ if $self->debug;
         $class->table(lc $tablename);

@@ -1,5 +1,11 @@
 Revision history for Perl extension DBIx::Class::Loader
 
+0.21  Mon Feb 27 23:42:48 2006
+        - Reverted the additional_base / left_base behavior
+	  to the original behavior, so that at least existing
+	  users get what they expect.  Schema::Loader will be
+	  doing things somewhat differently...
+
 0.20  Tue Feb 14 18:26:31 2006
         - Added correct bug contact info
         - Vendor modules now use ->storage
